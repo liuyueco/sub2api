@@ -31,14 +31,6 @@
 
           <div class="flex items-center gap-1 sm:gap-2">
             <LocaleSwitcher />
-            <button
-              type="button"
-              class="inline-flex rounded-lg p-2 text-white/60 transition hover:bg-white/10 hover:text-white"
-              :title="isDark ? copy.theme.light : copy.theme.dark"
-              @click="toggleTheme"
-            >
-              <Icon :name="isDark ? 'sun' : 'moon'" size="sm" />
-            </button>
             <router-link
               :to="isAuthenticated ? dashboardPath : '/login'"
               class="inline-flex h-10 items-center justify-center rounded-lg border border-white/15 bg-[#38a3fa]/90 px-4 text-sm font-black text-white shadow-[0_0_34px_rgba(56,163,250,0.30),inset_0_1px_0_rgba(255,255,255,0.24)] transition hover:bg-[#67b9ff]"
@@ -66,7 +58,7 @@
         <div class="mt-10 flex flex-col items-center gap-3 sm:flex-row">
           <router-link
             :to="isAuthenticated ? dashboardPath : '/register'"
-            class="inline-flex h-14 min-w-44 items-center justify-center gap-2 rounded-full border border-white/20 bg-[#38a3fa]/90 px-8 text-base font-black text-white shadow-[0_18px_54px_rgba(56,163,250,0.30),inset_0_1px_0_rgba(255,255,255,0.28)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-[#67b9ff]"
+            class="inline-flex h-14 min-w-44 items-center justify-center gap-2 rounded-full border border-[#6bbdff]/35 bg-[#38a3fa]/90 px-8 text-base font-black text-white shadow-[0_18px_54px_rgba(56,163,250,0.30)] transition hover:-translate-y-0.5 hover:bg-[#67b9ff]"
           >
             <Icon name="bolt" size="md" />
             {{ copy.cta.primary }}
@@ -74,7 +66,7 @@
           </router-link>
           <button
             type="button"
-            class="inline-flex h-14 min-w-44 items-center justify-center gap-2 rounded-full border border-white/14 bg-white/[0.055] px-8 text-base font-black text-white shadow-[0_18px_54px_rgba(0,0,0,0.24),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[#38a3fa]/35 hover:bg-white/[0.08]"
+            class="inline-flex h-14 min-w-44 items-center justify-center gap-2 rounded-full border border-[#273449] bg-[#0b1018]/90 px-8 text-base font-black text-white shadow-[0_18px_54px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5 hover:border-[#38a3fa]/45 hover:bg-[#101827]"
             @click="openGuideModal"
           >
             <Icon name="terminal" size="md" class="text-[#38a3fa]" />
@@ -86,7 +78,7 @@
           <article
             v-for="feature in copy.heroFeatures"
             :key="feature.title"
-            class="hero-feature-card flex items-start gap-4 rounded-lg border border-white/12 bg-white/[0.055] p-5 text-left shadow-[0_20px_70px_rgba(0,0,0,0.26),inset_0_1px_0_rgba(255,255,255,0.06)] backdrop-blur-xl transition hover:border-[#38a3fa]/28 hover:bg-white/[0.075]"
+            class="hero-feature-card flex items-start gap-4 rounded-lg border border-[#273449] bg-[#0b1018]/88 p-5 text-left shadow-[0_20px_70px_rgba(0,0,0,0.28)] transition hover:border-[#38a3fa]/38 hover:bg-[#101827]"
           >
             <Icon :name="feature.icon" size="md" class="mt-0.5 shrink-0 text-[#38a3fa]" />
             <span>
@@ -360,7 +352,6 @@ type IconName = InstanceType<typeof Icon>['$props']['name']
 interface HomeCopy {
   navItems: Array<{ label: string; href: string }>
   auth: { login: string; register: string; dashboard: string }
-  theme: { light: string; dark: string }
   eyebrow: string
   heroTitle: string
   heroTitleSuffix: string
@@ -413,7 +404,6 @@ interface DisplayPlan {
 const authStore = useAuthStore()
 const appStore = useAppStore()
 const { locale } = useI18n()
-const isDark = ref(true)
 const publicPlans = ref<SubscriptionPlan[]>([])
 const publicPlansLoaded = ref(false)
 const showGuideModal = ref(false)
@@ -492,7 +482,6 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
       { label: '联系我们', href: '#contact' }
     ],
     auth: { login: '登录', register: '注册', dashboard: '控制台' },
-    theme: { light: '切换浅色', dark: '切换深色' },
     eyebrow: '面向生产团队的 AI API 路由',
     heroTitle: '重构您的',
     heroTitleSuffix: 'AI 编程体验',
@@ -583,7 +572,6 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
       { label: 'Contact', href: '#contact' }
     ],
     auth: { login: 'Login', register: 'Sign up', dashboard: 'Dashboard' },
-    theme: { light: 'Switch to light mode', dark: 'Switch to dark mode' },
     eyebrow: 'AI API routing built for production teams',
     heroTitle: 'Rebuild your',
     heroTitleSuffix: 'AI coding experience',
@@ -778,16 +766,6 @@ async function fetchPublicPlans() {
   }
 }
 
-function applyTheme(nextIsDark: boolean) {
-  isDark.value = nextIsDark
-  document.documentElement.classList.toggle('dark', nextIsDark)
-}
-
-function toggleTheme() {
-  applyTheme(!isDark.value)
-  localStorage.setItem('theme', isDark.value ? 'dark' : 'light')
-}
-
 watch(locale, () => {
   document.title = locale.value === 'zh' ? '首页 - Titan Router' : 'Home - Titan Router'
 })
@@ -797,9 +775,6 @@ watch(showGuideModal, (isOpen) => {
 })
 
 onMounted(() => {
-  const savedTheme = localStorage.getItem('theme')
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  applyTheme(savedTheme ? savedTheme === 'dark' : prefersDark)
   document.title = locale.value === 'zh' ? '首页 - Titan Router' : 'Home - Titan Router'
 
   authStore.checkAuth()
