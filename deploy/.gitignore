@@ -17,3 +17,6 @@ redis_data/
 # Temporary files
 *.tmp
 *.log
+
+# Docker image export (local build → server deploy)
+sub2api-image.tar.gz
