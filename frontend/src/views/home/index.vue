@@ -108,20 +108,20 @@
         aria-modal="true"
         @click.self="closeGuideModal"
       >
-        <section class="guide-modal max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-[#38a3fa]/24 bg-black p-5 text-white shadow-[0_30px_120px_rgba(0,0,0,0.72)] sm:p-7">
+        <section class="guide-modal max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-5 text-gray-900 shadow-[0_30px_120px_rgba(0,0,0,0.72)] sm:p-7">
           <div class="flex items-start justify-between gap-4">
             <div>
               <div class="flex flex-wrap items-center gap-2 text-sm font-semibold text-[#38a3fa]">
                 <span>{{ copy.guide.eyebrow }}</span>
-                <span class="rounded-full border border-[#38a3fa]/22 bg-[#38a3fa]/10 px-3 py-1 text-xs text-[#9bd2ff]">
+                <span class="rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs text-primary-700">
                   {{ copy.guide.badge }}
                 </span>
               </div>
-              <h2 class="mt-2 text-xl font-black text-white sm:text-2xl">{{ copy.guide.title }}</h2>
+              <h2 class="mt-2 text-xl font-black text-gray-900 sm:text-2xl">{{ copy.guide.title }}</h2>
             </div>
             <button
               type="button"
-              class="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+              class="rounded-lg p-2 text-gray-500 transition hover:bg-gray-100 hover:text-gray-900"
               :aria-label="copy.guide.close"
               @click="closeGuideModal"
             >
@@ -137,8 +137,8 @@
               class="inline-flex h-9 items-center gap-2 rounded-full border px-3 text-sm font-semibold transition"
               :class="selectedGuideTool === tool.name
                 ? 'border-[#38a3fa] bg-[#38a3fa] text-white'
-                : 'border-white/16 bg-[#101010] text-slate-200 hover:border-[#38a3fa]/45 hover:bg-[#151515]'"
-              @click="selectedGuideTool = tool.name"
+                : 'border-gray-200 bg-white text-gray-700 hover:border-primary-300 hover:bg-gray-50'"
+              @click="selectGuideTool(tool.name)"
             >
               <span>{{ tool.icon }}</span>
               {{ tool.name }}
@@ -146,40 +146,125 @@
           </div>
 
           <div class="mt-5 flex flex-col gap-3 text-sm sm:flex-row sm:items-center">
-            <label class="text-slate-400" for="guide-model">{{ copy.guide.modelLabel }}</label>
+            <label class="text-gray-500" for="guide-model">{{ copy.guide.modelLabel }}</label>
             <select
               id="guide-model"
               v-model="selectedGuideModel"
-              class="h-10 rounded-lg border border-white/16 bg-[#101010] px-3 font-medium text-white outline-none transition focus:border-[#38a3fa] focus:ring-2 focus:ring-[#38a3fa]/18"
+              class="h-10 rounded-lg border border-gray-200 bg-white px-3 font-medium text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
             >
               <option v-for="model in copy.guide.models" :key="model" :value="model">{{ model }}</option>
             </select>
-            <span class="text-slate-500">{{ copy.guide.modelHint }}</span>
+            <span class="text-gray-500">{{ copy.guide.modelHint }}</span>
           </div>
 
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div class="inline-flex rounded-lg border border-white/16 bg-[#101010] p-1">
+          <div v-if="!isIntegratedGuide" class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div class="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-1">
               <button
                 v-for="os in copy.guide.osTabs"
                 :key="os"
                 type="button"
                 class="h-9 rounded-md px-4 text-sm font-semibold transition"
-                :class="selectedGuideOs === os ? 'bg-[#38a3fa] text-white' : 'text-slate-400 hover:bg-white/8 hover:text-white'"
+                :class="selectedGuideOs === os ? 'bg-[#38a3fa] text-white' : 'text-gray-500 hover:bg-white hover:text-gray-900'"
                 @click="selectedGuideOs = os"
               >
                 {{ os }}
               </button>
             </div>
-            <span class="text-sm text-slate-500">{{ copy.guide.detected }} {{ selectedGuideOs }}</span>
+            <span class="text-sm text-gray-500">{{ copy.guide.detected }} {{ selectedGuideOs }}</span>
           </div>
 
-          <p class="mt-4 text-sm leading-6 text-slate-400">{{ copy.guide.instruction }}</p>
+          <p class="mt-4 text-sm leading-6 text-gray-600">{{ guideInstruction }}</p>
 
-          <div class="relative mt-3 overflow-hidden rounded-lg border border-white/18 bg-[#050505]">
+          <div v-if="isCcSwitchGuide" class="mt-3 rounded-lg border border-dashed border-primary-300 bg-primary-50/40 p-5">
+            <h3 class="text-base font-black text-gray-900">{{ copy.guide.ccSwitch.title }}</h3>
+
+            <div class="mt-4 flex flex-wrap items-center gap-3">
+              <span class="text-sm text-gray-500">{{ copy.guide.ccSwitch.importLabel }}</span>
+              <div class="inline-flex rounded-lg border border-gray-200 bg-white p-1">
+                <button
+                  v-for="target in ccSwitchTargets"
+                  :key="target.value"
+                  type="button"
+                  class="h-9 rounded-md px-4 text-sm font-semibold transition"
+                  :class="selectedCcSwitchTarget === target.value ? 'bg-[#38a3fa] text-white' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'"
+                  @click="selectedCcSwitchTarget = target.value"
+                >
+                  {{ target.label }}
+                </button>
+              </div>
+              <span class="text-xs text-primary-700 sm:ml-auto">{{ copy.guide.ccSwitch.subModel }}</span>
+            </div>
+
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#38a3fa] px-4 text-sm font-black text-white transition hover:bg-[#67b9ff]"
+                @click="openCcSwitchImport"
+              >
+                <Icon name="bolt" size="sm" />
+                {{ copy.guide.ccSwitch.open }}
+              </button>
+              <span class="px-1 text-sm text-gray-500">{{ copy.guide.ccSwitch.notInstalled }}</span>
+              <a
+                v-for="download in ccSwitchDownloads"
+                :key="download.label"
+                :href="download.href"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 transition hover:border-primary-300 hover:bg-gray-50 hover:text-gray-900"
+              >
+                <Icon name="download" size="sm" />
+                {{ download.label }}
+              </a>
+            </div>
+
+            <a
+              :href="ccSwitchProjectUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="mt-4 inline-flex text-sm font-semibold text-primary-700 transition hover:text-primary-600"
+            >
+              {{ copy.guide.ccSwitch.project }}: farion1231/cc-switch
+            </a>
+
+            <div class="mt-4 rounded-md border border-primary-100 bg-white/70 px-3 py-2 text-sm text-gray-600">
+              {{ copy.guide.ccSwitch.notice }}
+            </div>
+          </div>
+
+          <div v-else-if="isCursorGuide" class="mt-3 rounded-lg border border-dashed border-primary-300 bg-primary-50/40 p-5">
+            <h3 class="text-base font-black text-gray-900">{{ copy.guide.cursor.title }}</h3>
+            <ol class="mt-3 space-y-2 pl-5 text-sm leading-6 text-gray-600">
+              <li v-for="step in copy.guide.cursor.steps" :key="step" class="list-decimal">{{ step }}</li>
+            </ol>
+
+            <div class="mt-5 space-y-3 border-t border-primary-100 pt-4">
+              <div v-for="field in cursorConfigFields" :key="field.label" class="grid gap-2 sm:grid-cols-[4rem_1fr_auto] sm:items-center">
+                <span class="text-sm text-gray-500">{{ field.label }}</span>
+                <code class="min-w-0 overflow-x-auto rounded-md border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900">
+                  {{ field.value }}
+                </code>
+                <button
+                  type="button"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-[#38a3fa] text-white transition hover:bg-[#67b9ff]"
+                  :title="copiedCursorField === field.key ? copy.guide.copied : copy.guide.copy"
+                  @click="copyCursorConfigValue(field.key, field.value)"
+                >
+                  <Icon name="copy" size="sm" />
+                </button>
+              </div>
+            </div>
+
+            <div class="mt-4 rounded-md border border-primary-100 bg-white/70 px-3 py-2 text-sm text-gray-600">
+              {{ copy.guide.cursor.notice }}
+            </div>
+          </div>
+
+          <div v-else class="relative mt-3 overflow-hidden rounded-lg border border-gray-200 bg-gray-950">
             <pre class="max-h-48 overflow-auto p-4 pr-14 text-left text-xs leading-5 text-slate-100"><code>{{ guideScript }}</code></pre>
             <button
               type="button"
-              class="absolute right-3 top-3 rounded-md border border-white/14 bg-[#141414] p-2 text-slate-300 shadow-sm transition hover:bg-[#202020] hover:text-white"
+              class="absolute right-3 top-3 rounded-md border border-dark-600 bg-dark-800 p-2 text-slate-300 shadow-sm transition hover:bg-dark-700 hover:text-white"
               :title="copiedGuideScript ? copy.guide.copied : copy.guide.copy"
               @click="copyGuideScript"
             >
@@ -187,24 +272,24 @@
             </button>
           </div>
 
-          <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div v-if="!isIntegratedGuide" class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
             <button
               type="button"
-              class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-white/16 bg-[#101010] px-4 text-sm font-semibold text-slate-200 transition hover:border-[#38a3fa]/45 hover:bg-[#151515] hover:text-white"
+              class="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 text-sm font-semibold text-gray-700 transition hover:border-primary-300 hover:bg-gray-50 hover:text-gray-900"
               @click="downloadGuideScript"
             >
               <Icon name="download" size="sm" />
               {{ copy.guide.download }}
             </button>
-            <span class="text-sm text-slate-500">{{ copy.guide.or }}</span>
-            <code class="rounded-md border border-white/16 bg-[#101010] px-3 py-2 text-xs text-slate-200">
+            <span class="text-sm text-gray-500">{{ copy.guide.or }}</span>
+            <code class="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700">
               {{ guideRunCommand }}
             </code>
           </div>
 
-          <p class="mt-4 text-sm leading-6 text-slate-500">{{ copy.guide.tip }}</p>
+          <p class="mt-4 text-sm leading-6 text-gray-500">{{ copy.guide.tip }}</p>
 
-          <div class="mt-4 rounded-lg border border-[#38a3fa]/28 bg-[#06111d] px-4 py-3 text-sm leading-6 text-[#d5ebff]">
+          <div class="mt-4 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3 text-sm leading-6 text-primary-900">
             {{ copy.guide.keyNotice }}
           </div>
 
@@ -346,6 +431,8 @@ import { apiClient } from '@/api/client'
 import LocaleSwitcher from '@/components/common/LocaleSwitcher.vue'
 import Icon from '@/components/icons/Icon.vue'
 import type { SubscriptionPlan } from '@/types/payment'
+import { buildCcSwitchImportDeeplink, type CcSwitchClientType } from '@/utils/ccswitchImport'
+import type { GroupPlatform } from '@/types'
 
 type IconName = InstanceType<typeof Icon>['$props']['name']
 
@@ -378,6 +465,23 @@ interface HomeCopy {
     or: string
     tip: string
     keyNotice: string
+    ccSwitch: {
+      title: string
+      description: string
+      importLabel: string
+      targets: { claude: string; codex: string }
+      subModel: string
+      open: string
+      notInstalled: string
+      project: string
+      notice: string
+    }
+    cursor: {
+      description: string
+      title: string
+      steps: string[]
+      notice: string
+    }
   }
   docs: { eyebrow: string; title: string; desc: string }
   capabilityCards: Array<{ icon: IconName; title: string; desc: string }>
@@ -407,10 +511,12 @@ const { locale } = useI18n()
 const publicPlans = ref<SubscriptionPlan[]>([])
 const publicPlansLoaded = ref(false)
 const showGuideModal = ref(false)
-const selectedGuideTool = ref('Claude Code')
+const selectedGuideTool = ref('CC Switch')
 const selectedGuideOs = ref('macOS')
 const selectedGuideModel = ref('claude-opus-4-7')
+const selectedCcSwitchTarget = ref<'claude' | 'codex'>('claude')
 const copiedGuideScript = ref(false)
+const copiedCursorField = ref('')
 
 const isAuthenticated = computed(() => authStore.isAuthenticated)
 const dashboardPath = computed(() => (authStore.isAdmin ? '/admin/dashboard' : '/dashboard'))
@@ -418,40 +524,353 @@ const docUrl = computed(() => appStore.cachedPublicSettings?.doc_url || appStore
 const siteDisplayName = computed(() => appStore.cachedPublicSettings?.site_name || appStore.siteName || 'titanrouter')
 const currentYear = computed(() => new Date().getFullYear())
 const copy = computed<HomeCopy>(() => homeCopies[locale.value === 'zh' ? 'zh' : 'en'])
+const isCcSwitchGuide = computed(() => selectedGuideTool.value === 'CC Switch')
+const isClaudeCodeGuide = computed(() => selectedGuideTool.value === 'Claude Code')
+const isCodexGuide = computed(() => selectedGuideTool.value === 'Codex')
+const isCursorGuide = computed(() => selectedGuideTool.value === 'Cursor')
+const isHermesGuide = computed(() => selectedGuideTool.value === 'Hermes')
+const isOpenClawGuide = computed(() => selectedGuideTool.value === 'OpenClaw')
+const isIntegratedGuide = computed(() => isCcSwitchGuide.value || isCursorGuide.value)
+const isProfileSetupGuide = computed(() => isClaudeCodeGuide.value || isCodexGuide.value || isHermesGuide.value || isOpenClawGuide.value)
+const guideInstruction = computed(() => {
+  if (isCcSwitchGuide.value) return copy.value.guide.ccSwitch.description
+  if (isCursorGuide.value) return copy.value.guide.cursor.description
+  return copy.value.guide.instruction
+})
+const cursorBaseUrl = computed(() => `${window.location.origin.replace(/\/+$/, '')}/v1`)
+const cursorConfigFields = computed(() => [
+  { key: 'baseUrl', label: 'Base URL', value: cursorBaseUrl.value },
+  { key: 'apiKey', label: 'API Key', value: 'sk-your-key-here' },
+  { key: 'model', label: 'Model', value: selectedGuideModel.value }
+])
+const ccSwitchProjectUrl = 'https://github.com/farion1231/cc-switch'
+const ccSwitchLatestReleaseUrl = `${ccSwitchProjectUrl}/releases/latest`
+const ccSwitchTargets = computed(() => [
+  { value: 'claude' as const, label: copy.value.guide.ccSwitch.targets.claude },
+  { value: 'codex' as const, label: copy.value.guide.ccSwitch.targets.codex }
+])
+const ccSwitchDownloads = computed(() => copy.value.guide.osTabs.map((label) => ({
+  label,
+  href: ccSwitchLatestReleaseUrl
+})))
+const ccSwitchUsageScript = `({
+  request: {
+    url: "{{baseUrl}}/v1/usage",
+    method: "GET",
+    headers: { "Authorization": "Bearer {{apiKey}}" }
+  },
+  extractor: function(response) {
+    const remaining = response?.remaining ?? response?.quota?.remaining ?? response?.balance;
+    const unit = response?.unit ?? response?.quota?.unit ?? "USD";
+    return {
+      isValid: response?.is_active ?? response?.isValid ?? true,
+      remaining,
+      unit
+    };
+  }
+})`
+const ccSwitchImportDeeplink = computed(() => {
+  const platform: GroupPlatform = selectedCcSwitchTarget.value === 'codex' ? 'openai' : 'anthropic'
+  const clientType: CcSwitchClientType = 'claude'
+  const baseUrl = window.location.origin.replace(/\/+$/, '')
+
+  return buildCcSwitchImportDeeplink({
+    baseUrl,
+    platform,
+    clientType,
+    providerName: (siteDisplayName.value || 'sub2api').trim() || 'sub2api',
+    apiKey: 'sk-your-key-here',
+    usageScript: ccSwitchUsageScript
+  })
+})
+const selectedGuideToolSlug = computed(() => selectedGuideTool.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''))
+const guideFileExtension = computed(() => {
+  if (selectedGuideOs.value === 'Windows') return 'ps1'
+  return isProfileSetupGuide.value ? 'sh' : 'env'
+})
+const guideFileName = computed(() => {
+  const slug = siteDisplayName.value.toLowerCase().replace(/\s+/g, '-')
+  const purpose = isProfileSetupGuide.value ? 'setup' : 'config.example'
+  return `${slug}-${selectedGuideToolSlug.value}-${purpose}.${guideFileExtension.value}`
+})
 const guideRunCommand = computed(() => {
-  const filename = `${siteDisplayName.value.toLowerCase().replace(/\s+/g, '-')}-config.example`
-  if (selectedGuideOs.value === 'Windows') return `powershell -ExecutionPolicy Bypass -File .\\${filename}`
-  return `cat ~/Downloads/${filename}`
+  if (selectedGuideOs.value === 'Windows') {
+    return `powershell -ExecutionPolicy Bypass -File .\\${guideFileName.value}`
+  }
+  if (!isProfileSetupGuide.value) return `cat ~/Downloads/${guideFileName.value}`
+  return `bash ~/Downloads/${guideFileName.value}`
 })
 const guideScript = computed(() => {
-  const apiBase = `${window.location.origin}/api`
+  const originBase = window.location.origin.replace(/\/+$/, '')
+  const apiBase = isClaudeCodeGuide.value || isCodexGuide.value ? originBase : `${originBase}/api`
+  const brandName = siteDisplayName.value || 'Titan Router'
+  const blockName = `${brandName} Claude Code`
+  const codexProviderID = 'sub2api'
+  const codexBlockName = `${brandName} Codex`
+  const osLabel = selectedGuideOs.value.toLowerCase()
+
+  if (isHermesGuide.value || isOpenClawGuide.value) {
+    return buildCompatibleProfileSetupScript({
+      brandName,
+      toolName: selectedGuideTool.value,
+      os: selectedGuideOs.value,
+      originBase,
+      model: selectedGuideModel.value
+    })
+  }
+
+  if (!isClaudeCodeGuide.value && !isCodexGuide.value) {
+    if (selectedGuideOs.value === 'Windows') {
+      return [
+        `# ${brandName} config example for ${selectedGuideTool.value}`,
+        '# Copy these values into your tool configuration.',
+        `$env:TITANROUTER_BASE_URL="${apiBase}"`,
+        '$env:TITANROUTER_API_KEY="sk-your-key-here"',
+        `$env:TITANROUTER_MODEL="${selectedGuideModel.value}"`,
+        '',
+        `# Selected tool: ${selectedGuideTool.value}`
+      ].join('\n')
+    }
+
+    const rcFile = selectedGuideOs.value === 'macOS' ? '$HOME/.zshrc' : '$HOME/.bashrc'
+    return [
+      '#!/usr/bin/env bash',
+      `# ${brandName} config example for ${selectedGuideTool.value}`,
+      '# Copy these values into your tool configuration.',
+      '',
+      `RC="${rcFile}"`,
+      '# Shell export example:',
+      '',
+      `export TITANROUTER_BASE_URL="${apiBase}"`,
+      'export TITANROUTER_API_KEY="sk-your-key-here"',
+      `export TITANROUTER_MODEL="${selectedGuideModel.value}"`,
+      '',
+      `# Selected tool: ${selectedGuideTool.value}`,
+      `# Suggested shell profile: ${rcFile}`
+    ].join('\n')
+  }
+
+  if (isCodexGuide.value) {
+    const codexModel = selectedGuideModel.value.startsWith('gpt-') ? selectedGuideModel.value : 'gpt-5.5'
+    const codexConfigContent = [
+      `# ${codexBlockName} start`,
+      `model_provider = "${codexProviderID}"`,
+      `model = "${codexModel}"`,
+      `review_model = "${codexModel}"`,
+      'model_reasoning_effort = "xhigh"',
+      'disable_response_storage = true',
+      'network_access = "enabled"',
+      'windows_wsl_setup_acknowledged = true',
+      '',
+      `[model_providers.${codexProviderID}]`,
+      `name = "${brandName}"`,
+      `base_url = "${apiBase}"`,
+      'wire_api = "responses"',
+      'env_key = "OPENAI_API_KEY"',
+      '',
+      '[features]',
+      'goals = true',
+      `# ${codexBlockName} end`
+    ].join('\n')
+
+    if (selectedGuideOs.value === 'Windows') {
+      return [
+        `# ${brandName} one-click setup for Codex (${osLabel})`,
+        '# Writes a Codex config and stores the API key in your PowerShell profile.',
+        '$ErrorActionPreference = "Stop"',
+        '',
+        '$CodexDir = Join-Path $env:USERPROFILE ".codex"',
+        '$ConfigPath = Join-Path $CodexDir "config.toml"',
+        'if (!(Test-Path $CodexDir)) { New-Item -ItemType Directory -Path $CodexDir -Force | Out-Null }',
+        'if (Test-Path $ConfigPath) {',
+        '  Copy-Item $ConfigPath "$ConfigPath.bak.$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"',
+        '}',
+        '',
+        "Set-Content -Path $ConfigPath -Value @'",
+        codexConfigContent,
+        "'@",
+        '',
+        '$ProfilePath = $PROFILE',
+        '$ProfileDir = Split-Path -Parent $ProfilePath',
+        'if (!(Test-Path $ProfileDir)) { New-Item -ItemType Directory -Path $ProfileDir -Force | Out-Null }',
+        'if (!(Test-Path $ProfilePath)) { New-Item -ItemType File -Path $ProfilePath -Force | Out-Null }',
+        `$Start = "# ${codexBlockName} env start"`,
+        `$End = "# ${codexBlockName} env end"`,
+        '$ProfileContent = Get-Content -Raw -Path $ProfilePath',
+        'if ($ProfileContent.Contains($Start)) {',
+        '  $Pattern = "(?s)\\r?\\n?" + [regex]::Escape($Start) + ".*?" + [regex]::Escape($End) + "\\r?\\n?"',
+        '  $ProfileContent = [regex]::Replace($ProfileContent, $Pattern, "`r`n").TrimEnd() + "`r`n"',
+        '  Set-Content -Path $ProfilePath -Value $ProfileContent',
+        '}',
+        '',
+        "Add-Content -Path $ProfilePath -Value @'",
+        '',
+        `# ${codexBlockName} env start`,
+        '$env:OPENAI_API_KEY="sk-your-key-here"',
+        `# ${codexBlockName} env end`,
+        "'@",
+        '',
+        `Write-Host "[${brandName}] Codex config written to $ConfigPath"`,
+        'if (!(Get-Command codex -ErrorAction SilentlyContinue)) {',
+        '  Write-Host ""',
+        `  Write-Host "[${brandName}] Codex CLI not installed yet. Install:"`,
+        '  Write-Host "  npm install -g @openai/codex"',
+        '  Write-Host ""',
+        '  Write-Host "Then replace sk-your-key-here in your PowerShell profile, open a NEW PowerShell window, and run: codex"',
+        '} else {',
+        '  Write-Host ""',
+        `  Write-Host "[${brandName}] Replace sk-your-key-here in your PowerShell profile, open a NEW PowerShell window, and run: codex"`,
+        '}'
+      ].join('\n')
+    }
+
+    const rcFile = selectedGuideOs.value === 'macOS' ? '$HOME/.zshrc' : '$HOME/.bashrc'
+    return [
+      '#!/usr/bin/env bash',
+      `# ${brandName} one-click setup for Codex (${osLabel})`,
+      '# Writes a Codex config and stores the API key in your shell profile.',
+      'set -e',
+      '',
+      'CODEX_DIR="$HOME/.codex"',
+      'CONFIG_PATH="$CODEX_DIR/config.toml"',
+      `RC="${rcFile}"`,
+      'mkdir -p "$CODEX_DIR"',
+      'touch "$RC"',
+      '',
+      'if [ -f "$CONFIG_PATH" ]; then',
+      '  cp "$CONFIG_PATH" "$CONFIG_PATH.bak.$(date +%s)"',
+      'fi',
+      '',
+      'cat > "$CONFIG_PATH" <<\'EOF\'',
+      codexConfigContent,
+      'EOF',
+      '',
+      `ENV_START="# ${codexBlockName} env start"`,
+      `ENV_END="# ${codexBlockName} env end"`,
+      'if grep -q "$ENV_START" "$RC" 2>/dev/null; then',
+      '  TMP="$RC.tmp.$$"',
+      '  awk -v start="$ENV_START" -v end="$ENV_END" \'',
+      '    $0 == start { skip = 1; next }',
+      '    $0 == end { skip = 0; next }',
+      '    !skip { print }',
+      '  \' "$RC" > "$TMP" && mv "$TMP" "$RC"',
+      'fi',
+      '',
+      'cat >> "$RC" <<\'EOF\'',
+      '',
+      `# ${codexBlockName} env start`,
+      'export OPENAI_API_KEY="sk-your-key-here"',
+      `# ${codexBlockName} env end`,
+      'EOF',
+      '',
+      `echo "[${brandName}] Codex config written to $CONFIG_PATH"`,
+      '. "$RC" 2>/dev/null || true',
+      '',
+      'if ! command -v codex >/dev/null 2>&1; then',
+      '  echo ""',
+      `  echo "[${brandName}] Codex CLI not installed yet. Install:"`,
+      '  echo "  npm install -g @openai/codex"',
+      '  echo ""',
+      '  echo "Then replace sk-your-key-here in your shell profile, open a NEW terminal, and run: codex"',
+      'else',
+      '  echo ""',
+      `  echo "[${brandName}] Replace sk-your-key-here in your shell profile, open a NEW terminal, and run: codex"`,
+      'fi'
+    ].join('\n')
+  }
+
   if (selectedGuideOs.value === 'Windows') {
     return [
-      '# titanrouter config example',
-      '# Copy these values into your tool configuration.',
-      `$env:TITANROUTER_BASE_URL="${apiBase}"`,
-      '$env:TITANROUTER_API_KEY="sk-your-key-here"',
-      `$env:TITANROUTER_MODEL="${selectedGuideModel.value}"`,
+      `# ${brandName} one-click setup for Claude Code (${osLabel})`,
+      "# Idempotent: re-running won't duplicate profile entries.",
+      '$ErrorActionPreference = "Stop"',
       '',
-      `# Selected tool: ${selectedGuideTool.value}`
+      '$ProfilePath = $PROFILE',
+      '$ProfileDir = Split-Path -Parent $ProfilePath',
+      'if (!(Test-Path $ProfileDir)) { New-Item -ItemType Directory -Path $ProfileDir -Force | Out-Null }',
+      'if (!(Test-Path $ProfilePath)) { New-Item -ItemType File -Path $ProfilePath -Force | Out-Null }',
+      '',
+      `$Start = "# ${blockName} start"`,
+      `$End = "# ${blockName} end"`,
+      '$Content = Get-Content -Raw -Path $ProfilePath',
+      'if ($Content.Contains($Start) -or $Content.Contains("ANTHROPIC_AUTH_TOKEN=")) {',
+      '  Copy-Item $ProfilePath "$ProfilePath.bak.$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"',
+      '  $Pattern = "(?s)\\r?\\n?" + [regex]::Escape($Start) + ".*?" + [regex]::Escape($End) + "\\r?\\n?"',
+      '  $Content = [regex]::Replace($Content, $Pattern, "`r`n").TrimEnd() + "`r`n"',
+      '  Set-Content -Path $ProfilePath -Value $Content',
+      `  Write-Host "[${brandName}] Refreshed existing Claude Code block in $ProfilePath"`,
+      '}',
+      '',
+      "Add-Content -Path $ProfilePath -Value @'",
+      '',
+      `# ${blockName} start`,
+      `$env:ANTHROPIC_BASE_URL="${apiBase}"`,
+      '$env:ANTHROPIC_AUTH_TOKEN="sk-your-key-here"',
+      `$env:ANTHROPIC_MODEL="${selectedGuideModel.value}"`,
+      '$env:CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1"',
+      `# ${blockName} end`,
+      "'@",
+      '',
+      `Write-Host "[${brandName}] Claude Code config written to $ProfilePath"`,
+      'if (!(Get-Command claude -ErrorAction SilentlyContinue)) {',
+      '  Write-Host ""',
+      `  Write-Host "[${brandName}] Claude Code not installed yet. Install:"`,
+      '  Write-Host "  npm install -g @anthropic-ai/claude-code"',
+      '  Write-Host ""',
+      '  Write-Host "Then re-open PowerShell and run: claude"',
+      '} else {',
+      '  Write-Host ""',
+      `  Write-Host "[${brandName}] All set. Open a NEW PowerShell window and run: claude"`,
+      '}'
     ].join('\n')
   }
 
   const rcFile = selectedGuideOs.value === 'macOS' ? '$HOME/.zshrc' : '$HOME/.bashrc'
   return [
     '#!/usr/bin/env bash',
-    '# titanrouter config example',
-    '# Copy these values into your tool configuration.',
+    `# ${brandName} one-click setup for Claude Code (${osLabel})`,
+    "# Idempotent: re-running won't duplicate exports.",
+    'set -e',
     '',
     `RC="${rcFile}"`,
-    '# Shell export example:',
+    `BLOCK_START="# ${blockName} start"`,
+    `BLOCK_END="# ${blockName} end"`,
+    'touch "$RC"',
     '',
-    `export TITANROUTER_BASE_URL="${apiBase}"`,
-    'export TITANROUTER_API_KEY="sk-your-key-here"',
-    `export TITANROUTER_MODEL="${selectedGuideModel.value}"`,
+    'if grep -q "$BLOCK_START" "$RC" 2>/dev/null || grep -q "ANTHROPIC_AUTH_TOKEN=" "$RC" 2>/dev/null; then',
+    '  cp "$RC" "$RC.bak.$(date +%s)"',
+    '  TMP="$RC.tmp.$$"',
+    '  awk -v start="$BLOCK_START" -v end="$BLOCK_END" \'',
+    '    $0 == start { skip = 1; next }',
+    '    $0 == end { skip = 0; next }',
+    '    !skip { print }',
+    '  \' "$RC" > "$TMP" && mv "$TMP" "$RC"',
+    `  echo "[${brandName}] Refreshed existing Claude Code block in $RC"`,
+    'fi',
     '',
-    `# Selected tool: ${selectedGuideTool.value}`,
-    `# Suggested shell profile: ${rcFile}`
+    'cat >> "$RC" <<\'EOF\'',
+    '',
+    `# ${blockName} start`,
+    `export ANTHROPIC_BASE_URL="${apiBase}"`,
+    'export ANTHROPIC_AUTH_TOKEN="sk-your-key-here"',
+    `export ANTHROPIC_MODEL="${selectedGuideModel.value}"`,
+    'export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1',
+    `# ${blockName} end`,
+    'EOF',
+    '',
+    `echo "[${brandName}] Claude Code config written to $RC"`,
+    '. "$RC" 2>/dev/null || true',
+    '',
+    'if ! command -v claude >/dev/null 2>&1; then',
+    '  echo ""',
+    `  echo "[${brandName}] Claude Code not installed yet. Install:"`,
+    '  echo "  npm install -g @anthropic-ai/claude-code"',
+    '  echo ""',
+    '  echo "Then re-open your terminal and run: claude"',
+    'else',
+    '  echo ""',
+    `  echo "[${brandName}] All set. Open a NEW terminal and run: claude"`,
+    'fi'
   ].join('\n')
 })
 const displayPlans = computed<DisplayPlan[]>(() => {
@@ -502,7 +921,7 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
     guide: {
       eyebrow: '一键接入',
       badge: '进群领试用额度',
-      title: '选个工具，复制配置，按说明接入。',
+      title: '选个工具，下载脚本，双击运行 —— 不用打开终端。',
       close: '关闭',
       tools: [
         { name: 'CC Switch', icon: '🎛️' },
@@ -513,17 +932,39 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
         { name: 'OpenClaw', icon: '🦞' }
       ],
       modelLabel: '模型',
-      models: ['claude-opus-4-7', 'gpt-5', 'gemini-2.5-pro', 'claude-sonnet-4'],
+      models: ['claude-opus-4-7', 'gpt-5.5', 'gpt-5', 'gemini-2.5-pro', 'claude-sonnet-4'],
       modelHint: '不在列表里？后续可在工具配置里手动填写',
       osTabs: ['macOS', 'Linux', 'Windows'],
       detected: '当前选择',
-      instruction: '下面是通用环境变量配置示例。不同工具的真实接入方式可能不同，后续会按工具适配。',
+      instruction: '下面是当前工具的接入配置。下载后按提示执行，或复制配置到对应工具。',
       copy: '复制配置',
       copied: '已复制',
-      download: '下载配置示例',
+      download: '下载配置脚本',
       or: '或',
       tip: '推荐：先在网页里试一下，确认账号和额度可用，再按工具文档接入本地工具。',
-      keyNotice: 'sk-your-key-here 是占位符。登录并创建 Key 后再替换，否则网关会拒绝请求。'
+      keyNotice: 'sk-your-key-here 是占位符。登录并创建 Key 后再替换，否则网关会拒绝请求。',
+      ccSwitch: {
+        title: 'CC Switch 一键导入',
+        description: 'GUI 工具，一键导入当前站点到 Claude Code / Codex，免改 env / config.toml。',
+        importLabel: '导入到',
+        targets: { claude: 'Claude Code', codex: 'Codex' },
+        subModel: '指定副模型（Haiku / Sonnet / Opus）可在 CC Switch 内继续调整',
+        open: '打开 CC Switch',
+        notInstalled: '没装先下载',
+        project: '项目主页',
+        notice: '首页展示的是占位 Key。登录后到 Key 管理页可以把真实 Key 一键导入 CC Switch。'
+      },
+      cursor: {
+        description: 'Cursor 需要手动配置，把下面三项复制到 Settings -> Models 即可。',
+        title: 'Cursor 需要手动配置（约 1 分钟）',
+        steps: [
+          '打开 Cursor 右上角齿轮，进入 Settings -> Models。',
+          '勾选 Override OpenAI Base URL。',
+          '把下面的 Base URL、API Key 和 Model 填进去。',
+          '在顶部模型选择里选择你要用的模型。'
+        ],
+        notice: '登录后这里会自动填入你的真实 Key；当前 sk-your-key-here 只是占位符。'
+      }
     },
     docs: {
       eyebrow: 'Unified gateway',
@@ -592,7 +1033,7 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
     guide: {
       eyebrow: 'One-click setup',
       badge: 'Join the group for trial credits',
-      title: 'Choose a tool, copy the config, and follow the setup notes.',
+      title: 'Choose a tool, download the setup, and run it without opening a terminal.',
       close: 'Close',
       tools: [
         { name: 'CC Switch', icon: '🎛️' },
@@ -603,17 +1044,39 @@ const homeCopies: Record<'zh' | 'en', HomeCopy> = {
         { name: 'OpenClaw', icon: '🦞' }
       ],
       modelLabel: 'Model',
-      models: ['claude-opus-4-7', 'gpt-5', 'gemini-2.5-pro', 'claude-sonnet-4'],
+      models: ['claude-opus-4-7', 'gpt-5.5', 'gpt-5', 'gemini-2.5-pro', 'claude-sonnet-4'],
       modelHint: 'Not listed? Fill it in manually in your tool config later.',
       osTabs: ['macOS', 'Linux', 'Windows'],
       detected: 'Selected',
-      instruction: 'This is a generic environment variable example. Real setup differs by tool and will be adapted next.',
+      instruction: 'Use the setup below for the selected tool. Download and run it, or copy the config into the tool.',
       copy: 'Copy config',
       copied: 'Copied',
-      download: 'Download config example',
+      download: 'Download setup script',
       or: 'or',
       tip: 'Recommended: try it in the web app first, then connect your local tool with the tool-specific guide.',
-      keyNotice: 'sk-your-key-here is a placeholder. Login, create a Key, and replace it before using the gateway.'
+      keyNotice: 'sk-your-key-here is a placeholder. Login, create a Key, and replace it before using the gateway.',
+      ccSwitch: {
+        title: 'CC Switch one-click import',
+        description: 'A GUI tool that imports this site into Claude Code / Codex without editing env files or config.toml.',
+        importLabel: 'Import to',
+        targets: { claude: 'Claude Code', codex: 'Codex' },
+        subModel: 'Sub-models such as Haiku / Sonnet / Opus can be adjusted in CC Switch.',
+        open: 'Open CC Switch',
+        notInstalled: 'Download first',
+        project: 'Project',
+        notice: 'This homepage shows a placeholder Key. After login, use the Key management page to import a real Key into CC Switch.'
+      },
+      cursor: {
+        description: 'Cursor requires manual setup. Copy the three values below into Settings -> Models.',
+        title: 'Cursor requires manual setup (about 1 minute)',
+        steps: [
+          'Open the gear icon in Cursor, then go to Settings -> Models.',
+          'Enable Override OpenAI Base URL.',
+          'Paste the Base URL, API Key, and Model below.',
+          'Select the model you want to use from the model picker.'
+        ],
+        notice: 'After login, this can be filled with your real Key. sk-your-key-here is only a placeholder.'
+      }
     },
     docs: {
       eyebrow: 'Unified gateway',
@@ -660,6 +1123,172 @@ function openGuideModal() {
   copiedGuideScript.value = false
 }
 
+function selectGuideTool(toolName: string) {
+  selectedGuideTool.value = toolName
+  copiedGuideScript.value = false
+  copiedCursorField.value = ''
+  if (toolName === 'CC Switch') {
+    selectedCcSwitchTarget.value = 'claude'
+  }
+  if (toolName === 'Codex' && !selectedGuideModel.value.startsWith('gpt-')) {
+    selectedGuideModel.value = 'gpt-5.5'
+  }
+  if (toolName === 'Claude Code' && !selectedGuideModel.value.startsWith('claude-')) {
+    selectedGuideModel.value = 'claude-opus-4-7'
+  }
+}
+
+function openCcSwitchImport() {
+  window.location.href = ccSwitchImportDeeplink.value
+}
+
+function resolveCompatibleProvider(model: string): 'anthropic' | 'openai' | 'gemini' {
+  if (model.startsWith('gpt-')) return 'openai'
+  if (model.startsWith('gemini-')) return 'gemini'
+  return 'anthropic'
+}
+
+function buildCompatibleProfileSetupScript(input: {
+  brandName: string
+  toolName: string
+  os: string
+  originBase: string
+  model: string
+}): string {
+  const blockName = `${input.brandName} ${input.toolName}`
+  const osLabel = input.os.toLowerCase()
+  const prefix = input.toolName.toUpperCase().replace(/[^A-Z0-9]+/g, '_')
+  const provider = resolveCompatibleProvider(input.model)
+  const openAIBase = `${input.originBase}/v1`
+  const anthropicBase = input.originBase
+  const geminiBase = input.originBase
+
+  const shellExports = [
+    `export ${prefix}_PROVIDER="${provider}"`,
+    `export ${prefix}_BASE_URL="${openAIBase}"`,
+    `export ${prefix}_API_KEY="sk-your-key-here"`,
+    `export ${prefix}_MODEL="${input.model}"`,
+    '',
+    `export OPENAI_BASE_URL="${openAIBase}"`,
+    'export OPENAI_API_KEY="sk-your-key-here"',
+    `export OPENAI_MODEL="${input.model}"`,
+    '',
+    `export ANTHROPIC_BASE_URL="${anthropicBase}"`,
+    'export ANTHROPIC_AUTH_TOKEN="sk-your-key-here"',
+    'export ANTHROPIC_API_KEY="sk-your-key-here"',
+    `export ANTHROPIC_MODEL="${input.model}"`,
+    '',
+    `export GEMINI_BASE_URL="${geminiBase}"`,
+    `export GOOGLE_GEMINI_BASE_URL="${geminiBase}"`,
+    'export GEMINI_API_KEY="sk-your-key-here"',
+    'export GOOGLE_API_KEY="sk-your-key-here"',
+    `export GEMINI_MODEL="${input.model}"`
+  ]
+
+  if (input.os === 'Windows') {
+    const profileAssignments = [
+      `$env:${prefix}_PROVIDER="${provider}"`,
+      `$env:${prefix}_BASE_URL="${openAIBase}"`,
+      `$env:${prefix}_API_KEY="sk-your-key-here"`,
+      `$env:${prefix}_MODEL="${input.model}"`,
+      '',
+      `$env:OPENAI_BASE_URL="${openAIBase}"`,
+      '$env:OPENAI_API_KEY="sk-your-key-here"',
+      `$env:OPENAI_MODEL="${input.model}"`,
+      '',
+      `$env:ANTHROPIC_BASE_URL="${anthropicBase}"`,
+      '$env:ANTHROPIC_AUTH_TOKEN="sk-your-key-here"',
+      '$env:ANTHROPIC_API_KEY="sk-your-key-here"',
+      `$env:ANTHROPIC_MODEL="${input.model}"`,
+      '',
+      `$env:GEMINI_BASE_URL="${geminiBase}"`,
+      `$env:GOOGLE_GEMINI_BASE_URL="${geminiBase}"`,
+      '$env:GEMINI_API_KEY="sk-your-key-here"',
+      '$env:GOOGLE_API_KEY="sk-your-key-here"',
+      `$env:GEMINI_MODEL="${input.model}"`
+    ]
+
+    return [
+      `# ${input.brandName} one-click setup for ${input.toolName} (${osLabel})`,
+      '# Writes common OpenAI / Anthropic / Gemini-compatible variables to your PowerShell profile.',
+      '$ErrorActionPreference = "Stop"',
+      '',
+      '$ProfilePath = $PROFILE',
+      '$ProfileDir = Split-Path -Parent $ProfilePath',
+      'if (!(Test-Path $ProfileDir)) { New-Item -ItemType Directory -Path $ProfileDir -Force | Out-Null }',
+      'if (!(Test-Path $ProfilePath)) { New-Item -ItemType File -Path $ProfilePath -Force | Out-Null }',
+      '',
+      `$Start = "# ${blockName} start"`,
+      `$End = "# ${blockName} end"`,
+      '$Content = Get-Content -Raw -Path $ProfilePath',
+      'if ($Content.Contains($Start)) {',
+      '  Copy-Item $ProfilePath "$ProfilePath.bak.$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"',
+      '  $Pattern = "(?s)\\r?\\n?" + [regex]::Escape($Start) + ".*?" + [regex]::Escape($End) + "\\r?\\n?"',
+      '  $Content = [regex]::Replace($Content, $Pattern, "`r`n").TrimEnd() + "`r`n"',
+      '  Set-Content -Path $ProfilePath -Value $Content',
+      `  Write-Host "[${input.brandName}] Refreshed existing ${input.toolName} block in $ProfilePath"`,
+      '}',
+      '',
+      "Add-Content -Path $ProfilePath -Value @'",
+      '',
+      `# ${blockName} start`,
+      ...profileAssignments,
+      `# ${blockName} end`,
+      "'@",
+      '',
+      `Write-Host "[${input.brandName}] ${input.toolName} config written to $ProfilePath"`,
+      'Write-Host "Replace sk-your-key-here with your real Key, then open a NEW PowerShell window."'
+    ].join('\n')
+  }
+
+  const rcFile = input.os === 'macOS' ? '$HOME/.zshrc' : '$HOME/.bashrc'
+  return [
+    '#!/usr/bin/env bash',
+    `# ${input.brandName} one-click setup for ${input.toolName} (${osLabel})`,
+    '# Writes common OpenAI / Anthropic / Gemini-compatible variables to your shell profile.',
+    'set -e',
+    '',
+    `RC="${rcFile}"`,
+    `BLOCK_START="# ${blockName} start"`,
+    `BLOCK_END="# ${blockName} end"`,
+    'touch "$RC"',
+    '',
+    'if grep -q "$BLOCK_START" "$RC" 2>/dev/null; then',
+    '  cp "$RC" "$RC.bak.$(date +%s)"',
+    '  TMP="$RC.tmp.$$"',
+    '  awk -v start="$BLOCK_START" -v end="$BLOCK_END" \'',
+    '    $0 == start { skip = 1; next }',
+    '    $0 == end { skip = 0; next }',
+    '    !skip { print }',
+    '  \' "$RC" > "$TMP" && mv "$TMP" "$RC"',
+    `  echo "[${input.brandName}] Refreshed existing ${input.toolName} block in $RC"`,
+    'fi',
+    '',
+    'cat >> "$RC" <<\'EOF\'',
+    '',
+    `# ${blockName} start`,
+    ...shellExports,
+    `# ${blockName} end`,
+    'EOF',
+    '',
+    `echo "[${input.brandName}] ${input.toolName} config written to $RC"`,
+    '. "$RC" 2>/dev/null || true',
+    'echo "Replace sk-your-key-here with your real Key, then open a NEW terminal."'
+  ].join('\n')
+}
+
+async function copyCursorConfigValue(fieldKey: string, value: string) {
+  try {
+    await navigator.clipboard.writeText(value)
+    copiedCursorField.value = fieldKey
+    window.setTimeout(() => {
+      if (copiedCursorField.value === fieldKey) copiedCursorField.value = ''
+    }, 1800)
+  } catch (error) {
+    console.warn('[home] Failed to copy cursor config:', error)
+  }
+}
+
 function closeGuideModal() {
   showGuideModal.value = false
 }
@@ -677,13 +1306,11 @@ async function copyGuideScript() {
 }
 
 function downloadGuideScript() {
-  const extension = selectedGuideOs.value === 'Windows' ? 'ps1' : 'env'
-  const filename = `${siteDisplayName.value.toLowerCase().replace(/\s+/g, '-')}-config.example.${extension}`
   const blob = new Blob([guideScript.value], { type: 'text/plain;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = filename
+  link.download = guideFileName.value
   document.body.appendChild(link)
   link.click()
   link.remove()
